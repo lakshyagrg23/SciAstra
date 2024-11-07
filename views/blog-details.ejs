@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= post.title %></title>
+
+  <!-- Bootstrap and Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/tailwind.css" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/styles.css">
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <!-- Header Section -->
+  <header class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-5 mb-4 shadow-md">
+    <div class="container text-center">
+      <h1 class="text-4xl font-bold"><%= post.title %></h1>
+      <p class="text-lg mt-2">By <%= post.author %> | <%= new Date(post.scheduled_at).toLocaleDateString() %></p>
+    </div>
+  </header>
+
+  <!-- Main Blog Content -->
+  <main class="container my-5">
+    <div class="bg-white p-5 rounded-lg shadow-lg">
+      
+      <!-- Blog Image -->
+      <% if (post.image_url) { %>
+        <img src="<%= post.image_url %>" alt="<%= post.title %> Image" class="w-full h-auto rounded-lg mb-4">
+      <% } %>
+
+      <!-- Blog Article -->
+      <article class="prose lg:prose-lg max-w-none">
+        <%= post.content %>
+      </article>
+      
+    </div>
+  </main>
+
+  <!-- Footer Section -->
+  <footer class="bg-gray-800 text-white py-4 mt-5">
+    <div class="container text-center">
+      <p class="mb-0">&copy; 2023 SciAstra. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS (optional) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

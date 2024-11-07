@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+
+  <!-- Bootstrap and Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+  <link href="/styles/styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+
+  <!-- Dashboard Header -->
+  <header class="bg-gradient-to-r from-red-600 to-red-400 text-white py-5 shadow-md">
+    <div class="container text-center">
+      <h1 class="text-3xl font-bold">Admin Dashboard</h1>
+      <p class="text-lg mt-2">Manage blog posts with ease</p>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="container my-5">
+    
+    <!-- Button to Add New Post -->
+    <div class="text-end mb-4">
+      <a href="/admin/create" class="btn btn-success px-4 py-2 text-white">+ Add New Post</a>
+    </div>
+
+    <!-- Blog Posts Table -->
+    <div class="bg-white p-5 rounded-lg shadow-lg">
+      <table class="table table-hover border border-gray-200 rounded-lg">
+        <thead class="bg-gray-50 text-gray-700">
+          <tr>
+            <th class="p-3">Title</th>
+            <th class="p-3">Author</th>
+            <th class="p-3">Status</th>
+            <th class="p-3">Scheduled Date</th>
+            <th class="p-3 text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% blogPosts.forEach(post => { %>
+            <tr class="hover:bg-gray-50">
+              <td class="p-3 text-indigo-700 font-semibold"><%= post.title %></td>
+              <td class="p-3"><%= post.author %></td>
+              <td class="p-3">
+                <% if (post.status === 'published') { %>
+                  <span class="badge bg-success">Published</span>
+                <% } else if (post.status === 'scheduled') { %>
+                  <span class="badge bg-warning text-dark">Scheduled</span>
+                <% } else { %>
+                  <span class="badge bg-secondary">Draft</span>
+                <% } %>
+              </td>
+              <td class="p-3"><%= new Date(post.scheduled_at).toLocaleDateString() %></td>
+              <td class="p-3 text-center">
+                <a href="/admin/edit/<%= post.id %>" class="btn btn-primary btn-sm mx-1">Edit</a>
+                <a href="/admin/delete/<%= post.id %>" class="btn btn-danger btn-sm mx-1" onclick="return confirm('Are you sure?')">Delete</a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-3">
+    <div class="container text-center">
+      <p class="mb-0">&copy; 2023 SciAstra. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS (optional) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
