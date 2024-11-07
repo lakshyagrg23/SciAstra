@@ -6,6 +6,7 @@ import flash from 'express-flash';
 import bcrypt from "bcrypt";
 import mysql from "mysql2/promise";
 import env from "dotenv";
+// import Instamojo from "instamojo-nodejs";
 
 const app = express();
 env.config();
@@ -27,7 +28,8 @@ const db = mysql.createPool({
     database: process.env.DB_NAME,
   });
 
-
+  // Instamojo.setKeys(process.env.INSTAMOJO_API_KEY, process.env.INSTAMOJO_AUTH_TOKEN);
+  // Instamojo.isSandboxMode(false); // Enable sandbox mode for testing
 
 // Schedule a check to run every minute to publish scheduled posts
 cron.schedule('* * * * *', async () => {
@@ -105,42 +107,44 @@ app.post("/register", async (req, res) => {
     }
   });
   
-  
+  // Middleware to check if the user is authenticated
+function isAuthenticated(req, res, next) {
+  if (req.session.user) {
+    next(); // User is logged in, so continue to the next middleware/route
+  } else {
+    req.flash("error", "Please log in to proceed with the purchase.");
+    res.redirect("/login"); // Redirect to login page if not logged in
+  }
+}
   
   // Handle User Login Submission
-app.post("/login", async (req, res) => {
+  app.post("/login", async (req, res) => {
     const { email, password } = req.body;
   
     try {
-      const [users] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+      const [users] = await req.db.query("SELECT * FROM users WHERE email = ?", [email]);
       const user = users[0];
   
-      // Check if user exists and password matches
       if (user && (await bcrypt.compare(password, user.password))) {
-        // Ensure the user has the 'user' role
-        if (user.role === "user") {
-          req.session.user = {
-            id: user.id,
-            email: user.email,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            role: user.role,
-          };
-          res.redirect("/blog"); // Redirect user to blog or home page
-        } else {
-          req.flash("error", "Please log in as an admin.");
-          res.redirect("/admin-login");
-        }
+        req.session.user = {
+          id: user.id,
+          email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          role: user.role,
+        };
+        res.redirect("/courses");
       } else {
         req.flash("error", "Invalid email or password.");
         res.redirect("/login");
       }
     } catch (error) {
-      console.error("User login error:", error);
+      console.error("Login error:", error);
       req.flash("error", "An error occurred. Please try again.");
       res.redirect("/login");
     }
   });
+  
   
   // Logout Route
   app.get("/logout", (req, res) => {
@@ -308,6 +312,127 @@ app.post("/admin-login", async (req, res) => {
   });
   
   
+
+// COURSES SECTION
+
+// Function to calculate the discounted price
+function calculateDiscountedPrice(course) {
+  const discount = (course.original_price * course.discount_percentage) / 100;
+  return course.original_price - discount;
+}
+
+// Courses Route
+app.get("/courses", async (req, res) => {
+  try {
+    const [courses] = await req.db.query("SELECT * FROM courses");
+    
+    // Calculate discounted price for each course
+    const coursesWithDiscount = courses.map(course => {
+      const discountAmount = (course.original_price * course.discount_percentage) / 100;
+      const discountedPrice = course.original_price - discountAmount;
+      return { ...course, discountedPrice: discountedPrice.toFixed(2) };
+    });
+    
+    res.render("courses", { courses: coursesWithDiscount });
+  } catch (error) {
+    console.error("Error fetching courses:", error);
+    res.status(500).send("Error loading courses.");
+  }
+});
+
+
+// Route to handle course selection and redirect to payment page
+app.post("/select-course", isAuthenticated, async (req, res) => {
+  const courseId = req.body.course_id;
+  try {
+    const [courseDetails] = await req.db.query("SELECT * FROM courses WHERE id = ?", [courseId]);
+    if (courseDetails.length > 0) {
+      const course = courseDetails[0];
+      const discountAmount = (course.original_price * course.discount_percentage) / 100;
+      const discountedPrice = course.original_price - discountAmount;
+
+      req.session.selectedCourse = {
+        ...course,
+        discountedPrice: discountedPrice.toFixed(2),
+      };
+      
+      res.redirect("/payment");
+    } else {
+      res.status(404).send("Course not found.");
+    }
+  } catch (error) {
+    console.error("Error selecting course:", error);
+    res.status(500).send("Error selecting course.");
+  }
+});
+
+
+// Route to render the payment page with selected course details
+// Payment Page Route
+app.get("/payment", isAuthenticated, (req, res) => {
+  if (req.session.selectedCourse) {
+    res.render("payment", { course: req.session.selectedCourse });
+  } else {
+    res.redirect("/courses"); // Redirect back to courses if no course is selected
+  }
+});
+
+// First verification step route
+app.post("/verify-step-1", isAuthenticated, (req, res) => {
+  if (req.session.selectedCourse) {
+    res.render("verify-step-1", { course: req.session.selectedCourse });
+  } else {
+    res.redirect("/courses");
+  }
+});
+
+// Second verification step route
+app.post("/verify-step-2", isAuthenticated, (req, res) => {
+  if (req.session.selectedCourse) {
+    res.render("verify-step-2", { course: req.session.selectedCourse });
+  } else {
+    res.redirect("/courses");
+  }
+});
+
+// Mock Payment Route (Mimics the payment page)
+app.post("/mock-payment", isAuthenticated, (req, res) => {
+  if (req.session.selectedCourse) {
+    res.render("dummy-payment", { course: req.session.selectedCourse });
+  } else {
+    res.redirect("/courses");
+  }
+});
+
+// Payment Success Route (Finalizes mock payment)
+app.get("/payment-success", async (req, res) => {
+  const course = req.session.selectedCourse;
+  const user = req.session.user; // Assuming user details are stored in session
+
+  if (course && user) {
+    try {
+      // Insert the transaction into the database
+      const [result] = await req.db.query(
+        "INSERT INTO transactions (user_id, course_id, amount_paid, payment_status) VALUES (?, ?, ?, 'completed')",
+        [user.id, course.id, course.discountedPrice]
+      );
+
+      // Clear the selected course from the session after purchase
+      req.session.selectedCourse = null;
+
+      // Render the payment success page with course details
+      res.render("payment-success", { course });
+    } catch (error) {
+      console.error("Error logging transaction:", error);
+      res.status(500).send("Error processing transaction.");
+    }
+  } else {
+    res.redirect("/courses");
+  }
+});
+
+
+
 
 
 app.listen(port, () => {

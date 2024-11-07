@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Available Courses</title>
+  
+  <!-- Bootstrap and Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="/styles/styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+
+  <!-- Header Section -->
+  <div class="container my-5">
+    <h2 class="text-4xl font-bold text-center mb-10 text-gray-800">Available Courses</h2>
+    
+    <!-- Courses Grid -->
+    <div class="row">
+      <% courses.forEach(course => { %>
+        <div class="col-md-4 mb-5">
+          <div class="card shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border-0">
+            
+            <!-- Card Content -->
+            <div class="card-body">
+              <h5 class="card-title text-2xl font-semibold text-gray-800 mb-2"><%= course.name %></h5>
+              <p class="card-text text-gray-600 mb-4"><%= course.description %></p>
+              
+              <!-- Pricing Section -->
+              <div class="text-lg font-semibold mb-4">
+                <p class="text-gray-700">Original Price: <span class="line-through">₹<%= course.original_price %></span></p>
+                <% if (course.discount_percentage > 0) { %>
+                  <p class="text-red-600">Discounted Price: ₹<%= course.discountedPrice %> <span class="text-sm">(<%= course.discount_percentage %>% off)</span></p>
+                <% } else { %>
+                  <p class="text-gray-800">Price: ₹<%= course.original_price %></p>
+                <% } %>
+              </div>
+
+              <!-- Enroll Now Button Styled to Match Home Page -->
+              <form action="/select-course" method="POST">
+                <input type="hidden" name="course_id" value="<%= course.id %>">
+                <button type="submit" class="w-full py-2 mt-3 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl">
+                  Enroll Now
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS (optional) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
