@@ -1,4 +1,3 @@
-
 # SciAstra - Academic & Research Preparation Platform
 
 SciAstra is a web application designed to help students prepare for admissions to prestigious research institutions like IISc, IISER, NISER, and ISI. The platform offers a range of courses and blog posts that provide guidance and resources to aspiring researchers.
