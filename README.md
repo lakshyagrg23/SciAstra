@@ -119,7 +119,7 @@ sciastra/
 ├── controllers/           # Controller files for business logic
 ├── .env                   # Environment configuration
 ├── app.js                 # Main server file
-├── schema.sql             # Database setup script
+├── queries.sql             # Database setup script
 └── README.md              # Project documentation
 ```
 
