@@ -16,7 +16,8 @@ const port = process.env.PORT;
 app.use(session({
   secret: process.env.SECRET_KEY,
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 1000 * 60 * 60 * 24 }
 }));
 
 app.use(flash());
@@ -32,6 +33,13 @@ const db = mysql.createPool({
   // Instamojo.isSandboxMode(false); // Enable sandbox mode for testing
 
 // Schedule a check to run every minute to publish scheduled posts
+
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null; // Sets `user` to null if no session user exists
+  next();
+});
+
+
 cron.schedule('* * * * *', async () => {
     console.log("Checking for scheduled posts to publish...");
     const now = new Date();
@@ -73,9 +81,23 @@ app.use((req, res, next) => {
 
 
 // Home Route
-app.get("/", (req, res) => {
-    res.render("home.ejs");
-  });
+app.get("/", async (req, res) => {
+  try {
+    // Fetch the first 4 courses from the courses table
+    const [courses] = await req.db.query("SELECT * FROM courses LIMIT 4");
+
+    // Fetch the latest 3 blog posts from the blog_posts table
+    const [blogPosts] = await req.db.query(
+      "SELECT * FROM blog_posts WHERE status = 'published' ORDER BY scheduled_at DESC LIMIT 3"
+    );
+
+    // Render the homepage with both courses and blog posts data
+    res.render("home", { courses, blogPosts });
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).send("Error loading homepage");
+  }
+});
 
 // Login GET Route
 app.get("/login", (req, res) => {
@@ -153,7 +175,7 @@ function isAuthenticated(req, res, next) {
         console.error("Logout error:", err);
         return res.status(500).send("Logout error");
       }
-      res.redirect("/login");
+      res.redirect("/");
     });
   });
 
@@ -216,7 +238,7 @@ app.post("/admin-login", async (req, res) => {
     });
 
     app.get("/admin/create", isAdmin, (req, res) => {
-    res.render("create-post");
+    res.render("create-post", { tinymceApiKey: process.env.TINYMCE_API_KEY });
     });
     
     // Create Blog Post Route
@@ -241,7 +263,7 @@ app.post("/admin-login", async (req, res) => {
         try {
             const [post] = await req.db.query("SELECT * FROM blog_posts WHERE id = ?", [postId]);
             if (post.length > 0) {
-            res.render("edit-post", { post: post[0] });
+            res.render("edit-post", { post: post[0], tinymceApiKey: process.env.TINYMCE_API_KEY });
             } else {
             res.status(404).send("Post not found.");
             }
@@ -378,27 +400,19 @@ app.get("/payment", isAuthenticated, (req, res) => {
 });
 
 // First verification step route
-app.post("/verify-step-1", isAuthenticated, (req, res) => {
+app.post("/verify", isAuthenticated, (req, res) => {
   if (req.session.selectedCourse) {
-    res.render("verify-step-1", { course: req.session.selectedCourse });
+    res.render("verify", { course: req.session.selectedCourse });
   } else {
     res.redirect("/courses");
   }
 });
 
-// Second verification step route
-app.post("/verify-step-2", isAuthenticated, (req, res) => {
-  if (req.session.selectedCourse) {
-    res.render("verify-step-2", { course: req.session.selectedCourse });
-  } else {
-    res.redirect("/courses");
-  }
-});
 
 // Mock Payment Route (Mimics the payment page)
 app.post("/mock-payment", isAuthenticated, (req, res) => {
   if (req.session.selectedCourse) {
-    res.render("dummy-payment", { course: req.session.selectedCourse });
+    res.render("payment-gateway", { course: req.session.selectedCourse });
   } else {
     res.redirect("/courses");
   }

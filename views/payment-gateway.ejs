@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mock Razorpay Payment Gateway</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f2f4f7;
+    }
+    .payment-container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    .header {
+      background-color: #4a5ee5;
+      color: white;
+      padding: 20px;
+      text-align: left;
+    }
+    .header h2 {
+      margin: 0;
+    }
+    .header .account-number {
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    .payment-summary {
+      padding: 20px;
+      font-size: 18px;
+    }
+    .payment-methods {
+      border-right: 1px solid #e0e0e0;
+    }
+    .method-item {
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      font-size: 16px;
+      border-bottom: 1px solid #e0e0e0;
+      cursor: pointer;
+    }
+    .method-item:last-child {
+      border-bottom: none;
+    }
+    .method-item:hover, .method-item.active {
+      background-color: #f7f7f7;
+      font-weight: bold;
+    }
+    .icon {
+      width: 30px;
+      margin-right: 10px;
+    }
+    .payment-details {
+      padding: 20px;
+    }
+    .pay-now-btn {
+      background-color: #4a5ee5;
+      color: white;
+      font-weight: bold;
+      width: 100%;
+    }
+    .pay-now-btn:hover {
+      background-color: #3a4eb5;
+    }
+    .cancel-btn {
+      background-color: #dc3545;
+      color: white;
+      font-weight: bold;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .cancel-btn:hover {
+      background-color: #c82333;
+    }
+    .footer {
+      padding: 15px;
+      background-color: #f7f7f7;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+    }
+    .payment-option {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container my-5">
+  <div class="payment-container row mx-auto">
+    <!-- Header -->
+    <div class="header col-12">
+      <h2>SciAstra</h2>
+      <p class="account-number">Account number: 2342352311</p>
+    </div>
+
+    <!-- Payment Methods -->
+    <div class="payment-methods col-md-4 p-0">
+      <div class="payment-summary">
+        <p>Amount payable is ₹ <strong><%= course.discountedPrice %></strong></p>
+      </div>
+      <div class="method-item" onclick="showPaymentOption('debitCard')">
+        <img src="https://img.icons8.com/?size=100&id=22186&format=png&color=228BE6" class="icon" alt="Debit Card">
+        Debit Card
+      </div>
+      <div class="method-item" onclick="showPaymentOption('creditCard')"> <!-- Using the same form fields as Debit Card -->
+        <img src="https://img.icons8.com/?size=100&id=f6f4NTIAYAPC&format=png&color=228BE6" class="icon" alt="Credit Card">
+        Credit Card
+      </div>
+      <div class="method-item" onclick="showPaymentOption('netbanking')">
+        <img src="https://img.icons8.com/?size=100&id=45642&format=png&color=228BE6" class="icon" alt="Netbanking">
+        Netbanking
+      </div>
+      <div class="method-item" onclick="showPaymentOption('wallet')">
+        <img src="https://img.icons8.com/?size=100&id=7991&format=png&color=228BE6" class="icon" alt="Wallet">
+        Wallet
+      </div>
+      <div class="method-item" onclick="showPaymentOption('upi')">
+        <img src="https://img.icons8.com/?size=100&id=112309&format=png&color=228BE6" class="icon" alt="UPI">
+        UPI
+      </div>
+    </div>
+
+    <!-- Payment Details -->
+    <div class="payment-details col-md-8">
+      <form action="/payment-success" method="GET">
+        <!-- Debit Card and Credit Card Option -->
+        <div id="debitCard" class="payment-option" style="display: block;"> <!-- Show by default -->
+          <h5>Pay with Debit Card</h5>
+          <div class="mb-3">
+            <label for="cardNumber" class="form-label">Card Number</label>
+            <input type="text" class="form-control" id="cardNumber" placeholder="Enter card number">
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="expiryDate" class="form-label">Expiry Date</label>
+              <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label for="cvv" class="form-label">CVV</label>
+              <input type="text" class="form-control" id="cvv" placeholder="CVV">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="cardHolder" class="form-label">Cardholder's Name</label>
+            <input type="text" class="form-control" id="cardHolder" placeholder="Enter name on card">
+          </div>
+        </div>
+
+        <div id="creditCard" class="payment-option">
+          <h5>Pay with Credit Card</h5>
+          <div class="mb-3">
+            <label for="cardNumber" class="form-label">Card Number</label>
+            <input type="text" class="form-control" id="cardNumber" placeholder="Enter card number">
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="expiryDate" class="form-label">Expiry Date</label>
+              <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label for="cvv" class="form-label">CVV</label>
+              <input type="text" class="form-control" id="cvv" placeholder="CVV">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="cardHolder" class="form-label">Cardholder's Name</label>
+            <input type="text" class="form-control" id="cardHolder" placeholder="Enter name on card">
+          </div>
+        </div>
+
+        <!-- Netbanking Option -->
+        <div id="netbanking" class="payment-option">
+          <h5>Netbanking</h5>
+          <label for="bank" class="form-label">Select Your Bank</label>
+          <select class="form-select" id="bank">
+            <option>SBI</option>
+            <option>HDFC Bank</option>
+            <option>ICICI Bank</option>
+            <option>Axis Bank</option>
+            <option>Punjab National Bank</option>
+          </select>
+        </div>
+
+        <!-- Wallet Option -->
+        <div id="wallet" class="payment-option">
+          <h5>Wallet</h5>
+          <label for="wallet" class="form-label">Select Wallet</label>
+          <select class="form-select" id="wallet">
+            <option>Paytm</option>
+            <option>PhonePe</option>
+            <option>Google Pay</option>
+            <option>Amazon Pay</option>
+          </select>
+        </div>
+
+        <!-- UPI Option -->
+        <div id="upi" class="payment-option">
+          <h5>UPI</h5>
+          <label for="upiId" class="form-label">UPI ID</label>
+          <input type="text" class="form-control" id="upiId" placeholder="Enter your UPI ID">
+        </div>
+
+        <!-- Pay Now and Cancel Buttons -->
+        <button type="submit" class="btn pay-now-btn mt-3">Pay Now</button>
+      </form>
+      <form action="/courses" method="GET">
+        <button type="submit" class="btn cancel-btn">Cancel Payment</button>
+      </form>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer col-12">
+      <p>Accept, process and disburse digital payments for your business. Powered by <strong>Razorpay</strong></p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function showPaymentOption(optionId) {
+    const options = document.querySelectorAll('.payment-option');
+    options.forEach(option => option.style.display = 'none');
+    
+    const selectedOption = document.getElementById(optionId);
+    selectedOption.style.display = 'block';
+  }
+</script>
+</body>
+</html>

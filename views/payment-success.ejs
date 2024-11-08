@@ -3,18 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment Successful</title>
+  <title>Payment Success</title>
+  
+  <!-- Bootstrap and Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="/styles/styles.css" rel="stylesheet">
 </head>
-<body class="bg-light">
-  <div class="container my-5">
-    <div class="bg-white p-5 rounded-lg shadow-lg max-w-md mx-auto text-center">
-      <h2 class="text-success mb-4">Payment Successful!</h2>
-      <p>Thank you for purchasing <strong><%= course.name %></strong>.</p>
-      <p>You will receive a confirmation email shortly.</p>
-    </div>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+
+  <div class="text-center bg-white p-8 rounded-lg shadow-lg">
+    <h1 class="text-4xl font-bold text-green-600 mb-4">Payment Successful!</h1>
+    <p class="text-lg text-gray-700 mb-6">Thank you for your purchase. Your transaction was successful.</p>
+
+    <!-- Return to Home Button -->
+    <a href="/" class="btn text-white font-bold py-2 px-4 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 transition duration-300">
+      Return to Home
+    </a>
   </div>
 
+  <!-- Optional Bootstrap JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

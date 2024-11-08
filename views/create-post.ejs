@@ -9,6 +9,16 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.tiny.cloud/1/<%= tinymceApiKey %>/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+  <script>
+    tinymce.init({
+      selector: '#content',
+    plugins: 'link image lists code table preview',
+    toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | code preview',
+    menubar: false,
+    height: 300
+    });
+  </script>
 </head>
 <body class="bg-gray-100">
 
@@ -22,7 +32,7 @@
   <!-- Main Form Container -->
   <main class="container my-5">
     <div class="bg-white p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
-      <h2 class="text-2xl font-semibold text-indigo-700 mb-4">New Post Details</h2>
+      <h2 class="text-2xl font-semibold text-indigo-700 mb-4">Create New Post</h2>
 
       <!-- Create Post Form -->
       <form id="postForm" action="/admin/create" method="POST" class="space-y-4">
@@ -47,27 +57,24 @@
 
         <!-- Content Field -->
         <div>
-            <label for="content" class="block text-sm font-medium text-gray-700">Content</label>
-            <textarea name="content" id="content" rows="6" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required></textarea>
-          </div>
+          <label for="content" class="block text-sm font-medium text-gray-700">Content</label>
+          <textarea name="content" id="content" rows="10" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required></textarea>
+        </div>
 
-        <!-- Scheduled At Field (Pre-filled with Current Date and Time) -->
+        <!-- Scheduled Date Field -->
         <div>
           <label for="scheduled_at" class="block text-sm font-medium text-gray-700">Scheduled At</label>
           <input type="datetime-local" name="scheduled_at" id="scheduled_at" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
         </div>
 
-        <!-- Form Action Buttons -->
-        <div class="flex space-x-3">
-          <!-- Save as Draft Button -->
-          <button type="button" onclick="submitForm('draft')" class="w-full bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600">Save as Draft</button>
-
-          <!-- Create Post Button (Default immediate publishing) -->
-          <button type="button" onclick="submitForm('published')" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700">Create Post</button>
+        <!-- Save as Draft and Create Post Buttons -->
+        <div class="flex justify-end space-x-3">
+          <button type="button" onclick="submitFormAsDraft()" class="w-full bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600">Save as Draft</button>
+          <button type="button" onclick="submitFormAsPublished()" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700">Create Post</button>
         </div>
       </form>
     </div>
-  </main>
+</main>
 
   <!-- Footer Section -->
   <footer class="bg-gray-800 text-white py-4 mt-5">
@@ -76,61 +83,60 @@
     </div>
   </footer>
 
-  <!-- JavaScript Libraries: Quill, Bootstrap, and Custom Script -->
-  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Initialize Quill Editor and Sync Content to Hidden Input -->
   <script>
-    // Initialize Quill editor
-    const quill = new Quill('#editor', {
-      theme: 'snow',
-      modules: {
-        toolbar: [
-          [{ 'header': [1, 2, false] }],
-          ['bold', 'italic', 'underline'],
-          ['link', 'blockquote', 'code-block', 'image'],
-          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-          [{ 'align': [] }]
-        ]
-      }
+    tinymce.init({
+      selector: '#content',
+      plugins: 'link image lists code table preview',
+      toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | code preview',
+      menubar: false,
+      height: 300
     });
+  </script>
+  <script>
+    // JavaScript to set the current date and time in the Scheduled At field
+    document.addEventListener('DOMContentLoaded', () => {
+    const scheduledAtInput = document.getElementById('scheduled_at');
+    const now = new Date();
 
-    // Sync Quill content to hidden input before form submission
-    const form = document.getElementById('postForm');
-    form.onsubmit = function() {
-      // Populate hidden input with Quill HTML content
-      const quillContent = quill.root.innerHTML;
-      document.getElementById('content').value = quillContent;
+    // Get local date and time in the format required by datetime-local input
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
 
-      // Debugging step: Log the content to check if it is being set
-      console.log("Quill content:", quillContent);
-      console.log("Hidden input value:", document.getElementById('content').value);
-      
-      return true;  // Proceed with form submission
-    };
-
-    // Set default scheduled time to current date and time
-    function setDefaultDateTime() {
-      const dateField = document.getElementById('scheduled_at');
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      dateField.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+    scheduledAtInput.value = formattedDate;
+  });
+  
+    // JavaScript to set the form action based on the button clicked
+    function submitFormAsDraft() {
+      const form = document.getElementById('postForm');
+      const statusField = document.createElement('input');
+      statusField.setAttribute('type', 'hidden');
+      statusField.setAttribute('name', 'status');
+      statusField.setAttribute('value', 'draft');
+      form.appendChild(statusField);
+      form.submit();
     }
-
-    window.onload = setDefaultDateTime;
-
-    // Custom function to submit the form with a status
-    function submitForm(status) {
-      const statusInput = document.createElement('input');
-      statusInput.type = 'hidden';
-      statusInput.name = 'status';
-      statusInput.value = status;
-      form.appendChild(statusInput);
+  
+    function submitFormAsPublished() {
+      const form = document.getElementById('postForm');
+      const scheduledAt = new Date(document.getElementById('scheduled_at').value);
+      const now = new Date();
+      const statusField = document.createElement('input');
+      statusField.setAttribute('type', 'hidden');
+      statusField.setAttribute('name', 'status');
+  
+      // Set status based on scheduled time
+      if (scheduledAt > now) {
+        statusField.setAttribute('value', 'scheduled');
+      } else {
+        statusField.setAttribute('value', 'published');
+      }
+      
+      form.appendChild(statusField);
       form.submit();
     }
   </script>
