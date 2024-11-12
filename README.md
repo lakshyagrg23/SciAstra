@@ -4,7 +4,7 @@ SciAstra is a web application designed to help students prepare for admissions t
 
 ## Project Demo Video
 
-[![Project Demo Video](demo/thumbnail.png)](demo/Demo_Video.mp4)
+[![Project Demo Video on YouTube](demo/thumbnail.png)](https://youtu.be/IXwHN-gb2Zg)
 
 ---
 
